@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zomato Payout Calculator</title>
+<style>
+body{font-family:Arial,sans-serif;background:#f4f6f9;margin:0;padding:30px}
+.container{max-width:900px;margin:auto}
+.card{background:#fff;padding:20px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.1);margin-bottom:20px}
+h2{margin-top:0}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}
+label{font-weight:bold;font-size:14px}
+input{width:100%;padding:10px;margin-top:5px;border:1px solid #ccc;border-radius:6px;box-sizing:border-box}
+.result{background:#eef7ff;padding:12px;border-radius:8px;margin-top:15px}
+.row{display:flex;justify-content:space-between;padding:4px 0}
+.total{font-weight:bold;font-size:18px;border-top:1px solid #ccc;padding-top:10px}
+@media(max-width:700px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="card">
+<h2>Settings</h2>
+<div class="grid">
+<div><label>Base Service Fee (%)</label><input id="baseFee" type="number" value="25" step="0.01"></div>
+<div><label>Payment Fee (%)</label><input id="paymentFee" type="number" value="1.84" step="0.01"></div>
+<div><label>GST on Fees (%)</label><input id="gst" type="number" value="18" step="0.01"></div>
+</div>
+</div>
+
+<div class="card">
+<h2>Forward Calculator (Menu Price → Payout)</h2>
+<label>Menu Price (₹)</label>
+<input id="menuPrice" type="number" value="200" step="0.01">
+<div class="result">
+<div class="row"><span>Base Fee</span><span id="rBase"></span></div>
+<div class="row"><span>Payment Fee</span><span id="rPayment"></span></div>
+<div class="row"><span>GST on Fees</span><span id="rGST"></span></div>
+<div class="row total"><span>Final Payout</span><span id="rPayout"></span></div>
+</div>
+</div>
+
+<div class="card">
+<h2>Reverse Calculator (Desired Payout → Required Menu Price)</h2>
+<label>Desired Payout (₹)</label>
+<input id="desired" type="number" value="200" step="0.01">
+<div class="result">
+<div class="row total"><span>Required Menu Price</span><span id="requiredPrice"></span></div>
+</div>
+</div>
+
+</div>
+
+<script>
+function calc(){
+ let base=parseFloat(baseFee.value)||0;
+ let pay=parseFloat(paymentFee.value)||0;
+ let gst=parseFloat(gstInput.value)||0;
+ let price=parseFloat(menuPrice.value)||0;
+ let desiredP=parseFloat(desired.value)||0;
+
+ let baseAmt=price*base/100;
+ let payAmt=price*pay/100;
+ let gstAmt=(baseAmt+payAmt)*gst/100;
+ let payout=price-baseAmt-payAmt-gstAmt;
+
+ rBase.textContent="₹ "+baseAmt.toFixed(2);
+ rPayment.textContent="₹ "+payAmt.toFixed(2);
+ rGST.textContent="₹ "+gstAmt.toFixed(2);
+ rPayout.textContent="₹ "+payout.toFixed(2);
+
+ let effective=(base+pay)+(base+pay)*gst/100;
+ let factor=1-effective/100;
+ let required=desiredP/factor;
+ requiredPrice.textContent="₹ "+required.toFixed(2);
+}
+
+const baseFee=document.getElementById("baseFee");
+const paymentFee=document.getElementById("paymentFee");
+const gstInput=document.getElementById("gst");
+const menuPrice=document.getElementById("menuPrice");
+const desired=document.getElementById("desired");
+
+const rBase=document.getElementById("rBase");
+const rPayment=document.getElementById("rPayment");
+const rGST=document.getElementById("rGST");
+const rPayout=document.getElementById("rPayout");
+const requiredPrice=document.getElementById("requiredPrice");
+
+document.querySelectorAll("input").forEach(i=>i.addEventListener("input",calc));
+calc();
+</script>
+</body>
+</html>
