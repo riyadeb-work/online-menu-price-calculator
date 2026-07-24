@@ -2,95 +2,773 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Zomato Payout Calculator</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Payout Calculator — Zomato / Swiggy / Magicpin</title>
+<meta name="description" content="Calculate your real food-delivery payout, required menu price, and profit margin across Zomato, Swiggy and Magicpin.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-body{font-family:Arial,sans-serif;background:#f4f6f9;margin:0;padding:30px}
-.container{max-width:900px;margin:auto}
-.card{background:#fff;padding:20px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.1);margin-bottom:20px}
-h2{margin-top:0}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}
-label{font-weight:bold;font-size:14px}
-input{width:100%;padding:10px;margin-top:5px;border:1px solid #ccc;border-radius:6px;box-sizing:border-box}
-.result{background:#eef7ff;padding:12px;border-radius:8px;margin-top:15px}
-.row{display:flex;justify-content:space-between;padding:4px 0}
-.total{font-weight:bold;font-size:18px;border-top:1px solid #ccc;padding-top:10px}
-@media(max-width:700px){.grid{grid-template-columns:1fr}}
+:root{
+  --bg:#F4F6F3;
+  --bg-dot:rgba(31,111,84,0.08);
+  --surface:#FFFFFF;
+  --surface-2:#EEF3EF;
+  --ink:#132720;
+  --ink-soft:#5C6F67;
+  --ink-faint:#8CA098;
+  --line:#DDE5DF;
+  --line-strong:#C4D0C8;
+  --accent:#1F6F54;
+  --accent-dark:#155A43;
+  --accent-soft:#E1F0E8;
+  --accent-ink:#0E3A2B;
+  --warn:#B45309;
+  --warn-soft:#FBEEE0;
+  --danger:#B3261E;
+  --danger-soft:#FBEAE8;
+  --shadow:0 1px 2px rgba(19,39,32,0.06),0 8px 24px -12px rgba(19,39,32,0.18);
+  --radius:16px;
+  --radius-sm:10px;
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+  --disp:'Space Grotesk',sans-serif;
+  --body:'Inter',sans-serif;
+}
+[data-theme="dark"]{
+  --bg:#0E1B16;
+  --bg-dot:rgba(79,191,143,0.07);
+  --surface:#142620;
+  --surface-2:#1A2F28;
+  --ink:#E7F0EC;
+  --ink-soft:#9CB3AA;
+  --ink-faint:#63796F;
+  --line:#233B32;
+  --line-strong:#2F4B40;
+  --accent:#4FBF8F;
+  --accent-dark:#6FD3A6;
+  --accent-soft:#193B2E;
+  --accent-ink:#B7EBD2;
+  --warn:#E0A458;
+  --warn-soft:#3A2A16;
+  --danger:#E28079;
+  --danger-soft:#3A1B18;
+  --shadow:0 1px 2px rgba(0,0,0,0.3),0 8px 24px -12px rgba(0,0,0,0.5);
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;
+  font-family:var(--body);
+  background:
+    radial-gradient(var(--bg-dot) 1px, transparent 1px) 0 0/16px 16px,
+    var(--bg);
+  color:var(--ink);
+  min-height:100vh;
+  padding-bottom:48px;
+  transition:background-color .25s ease,color .25s ease;
+}
+.wrap{max-width:640px;margin:0 auto;padding:0 16px}
+
+/* ---------- Top bar ---------- */
+.topbar{
+  position:sticky;top:0;z-index:20;
+  backdrop-filter:blur(10px);
+  background:color-mix(in srgb, var(--bg) 82%, transparent);
+  border-bottom:1px solid var(--line);
+  padding-top:env(safe-area-inset-top);
+}
+.topbar-inner{
+  max-width:640px;margin:0 auto;padding:12px 16px;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.brand-mark{
+  width:34px;height:34px;border-radius:9px;flex:none;
+  background:linear-gradient(155deg,var(--accent),var(--accent-dark));
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;font-family:var(--disp);font-weight:700;font-size:15px;
+  box-shadow:var(--shadow);
+}
+.brand-text{min-width:0}
+.brand-text h1{font-family:var(--disp);font-size:15.5px;font-weight:700;margin:0;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brand-text p{margin:0;font-size:11px;color:var(--ink-faint);white-space:nowrap}
+.live-payout{
+  text-align:right;flex:none;
+}
+.live-payout .lbl{font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-faint);display:block}
+.live-payout .val{font-family:var(--mono);font-weight:600;font-size:16px;color:var(--accent-dark);display:block;line-height:1.2}
+[data-theme="dark"] .live-payout .val{color:var(--accent)}
+.icon-btn{
+  width:34px;height:34px;border-radius:9px;border:1px solid var(--line);
+  background:var(--surface);color:var(--ink-soft);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none;
+  transition:border-color .15s, color .15s, transform .1s;
+}
+.icon-btn:hover{border-color:var(--accent);color:var(--accent)}
+.icon-btn:active{transform:scale(.94)}
+.icon-btn svg{width:17px;height:17px}
+
+/* ---------- Sections ---------- */
+.section-title{
+  font-family:var(--disp);font-size:12.5px;font-weight:600;
+  text-transform:uppercase;letter-spacing:.09em;color:var(--ink-soft);
+  margin:26px 2px 10px;display:flex;align-items:center;gap:8px;
+}
+.section-title .n{
+  font-family:var(--mono);font-size:10.5px;color:var(--accent);
+  border:1px solid var(--line-strong);border-radius:5px;padding:1px 5px;
+}
+.card{
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px;box-shadow:var(--shadow);
+}
+
+/* ---------- Presets ---------- */
+.presets{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 6px;margin:0 -2px;scrollbar-width:none}
+.presets::-webkit-scrollbar{display:none}
+.chip{
+  flex:none;font-family:var(--body);font-weight:600;font-size:13px;
+  padding:9px 15px;border-radius:999px;border:1px solid var(--line-strong);
+  background:var(--surface);color:var(--ink-soft);cursor:pointer;
+  transition:all .15s;white-space:nowrap;
+}
+.chip:active{transform:scale(.96)}
+.chip.active{background:var(--accent);border-color:var(--accent);color:#fff}
+[data-theme="dark"] .chip.active{color:#0E1B16}
+
+/* ---------- Fields ---------- */
+.field{margin-bottom:14px}
+.field:last-child{margin-bottom:0}
+.field label{
+  display:flex;justify-content:space-between;align-items:baseline;
+  font-size:12.5px;font-weight:600;color:var(--ink-soft);margin-bottom:6px;
+}
+.field label .hint{font-weight:400;color:var(--ink-faint);font-size:11px}
+.input-wrap{position:relative}
+.input-wrap .prefix{
+  position:absolute;left:12px;top:50%;transform:translateY(-50%);
+  font-family:var(--mono);color:var(--ink-faint);font-size:14px;pointer-events:none;
+}
+.input-wrap .suffix{
+  position:absolute;right:12px;top:50%;transform:translateY(-50%);
+  font-family:var(--mono);color:var(--ink-faint);font-size:13px;pointer-events:none;
+}
+input[type=number]{
+  width:100%;font-family:var(--mono);font-size:15px;font-weight:500;
+  padding:11px 14px;border:1.5px solid var(--line-strong);border-radius:var(--radius-sm);
+  background:var(--surface-2);color:var(--ink);
+  -moz-appearance:textfield;
+}
+input[type=number].has-prefix{padding-left:28px}
+input[type=number].has-suffix{padding-right:34px}
+input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+input[type=number]:focus{outline:none;border-color:var(--accent);background:var(--surface);box-shadow:0 0 0 3px var(--accent-soft)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* segmented toggle (funded by) */
+.seg{display:flex;border:1.5px solid var(--line-strong);border-radius:var(--radius-sm);overflow:hidden}
+.seg button{
+  flex:1;padding:10px 6px;border:none;background:var(--surface-2);color:var(--ink-soft);
+  font-family:var(--body);font-weight:600;font-size:12.5px;cursor:pointer;transition:.15s;
+}
+.seg button.active{background:var(--accent);color:#fff}
+[data-theme="dark"] .seg button.active{color:#0E1B16}
+.seg button+button{border-left:1.5px solid var(--line-strong)}
+
+details.settings{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+details.settings summary{
+  list-style:none;cursor:pointer;padding:16px 18px;
+  display:flex;align-items:center;justify-content:between;gap:10px;
+  font-family:var(--disp);font-weight:600;font-size:14px;
+}
+details.settings summary::-webkit-details-marker{display:none}
+.summary-row{display:flex;align-items:center;justify-content:space-between;width:100%}
+.chev{transition:transform .2s;color:var(--ink-faint)}
+details[open] .chev{transform:rotate(180deg)}
+.settings-body{padding:2px 18px 18px}
+.divider{height:1px;background:var(--line);margin:16px 0}
+.subhead{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-faint);margin:0 0 10px}
+
+/* ---------- Tabs ---------- */
+.tabs{display:flex;gap:6px;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:4px;margin-bottom:14px}
+.tab{
+  flex:1;text-align:center;padding:9px 4px;border:none;background:transparent;border-radius:9px;
+  font-family:var(--disp);font-weight:600;font-size:12.5px;color:var(--ink-soft);cursor:pointer;transition:.15s;
+}
+.tab.active{background:var(--surface);color:var(--accent-dark);box-shadow:var(--shadow)}
+[data-theme="dark"] .tab.active{color:var(--accent)}
+.panel{display:none}
+.panel.active{display:block}
+
+/* ---------- Receipt ---------- */
+.receipt-wrap{position:relative;margin-top:26px}
+.receipt{
+  background:var(--surface);border:1px solid var(--line);border-radius:2px;
+  box-shadow:var(--shadow);padding:22px 20px 18px;position:relative;
+  font-family:var(--mono);
+}
+.receipt::before,.receipt::after{
+  content:"";position:absolute;left:0;right:0;height:12px;
+  background-image:radial-gradient(circle at 8px 6px, var(--bg) 6px, transparent 6.5px);
+  background-size:16px 12px;background-repeat:repeat-x;
+}
+.receipt::before{top:-6px}
+.receipt::after{bottom:-6px;transform:scaleY(-1)}
+.receipt-head{text-align:center;margin-bottom:14px}
+.receipt-head .plat{
+  font-family:var(--disp);font-weight:700;font-size:13px;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--ink-soft);
+}
+.receipt-head .plat .dot{color:var(--accent);margin:0 5px}
+.receipt-head .price-big{font-size:26px;font-weight:600;margin-top:4px}
+.rline{
+  display:flex;justify-content:space-between;align-items:baseline;
+  font-size:13px;padding:6px 0;border-bottom:1px dashed var(--line);color:var(--ink-soft);
+}
+.rline .amt{color:var(--ink);font-weight:500}
+.rline.deduct .amt{color:var(--danger)}
+.rline.add .amt{color:var(--accent-dark)}
+[data-theme="dark"] .rline.add .amt{color:var(--accent)}
+.rline.tight{border-bottom:none;padding-top:0}
+.rtotal{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-top:10px;padding-top:14px;border-top:2px solid var(--ink);
+}
+.rtotal .lbl{font-family:var(--disp);font-weight:600;font-size:13px;color:var(--ink)}
+.rtotal .amt{font-size:22px;font-weight:700;color:var(--accent-dark)}
+[data-theme="dark"] .rtotal .amt{color:var(--accent)}
+.margin-pill{
+  margin-top:12px;text-align:center;font-size:12px;font-weight:600;
+  padding:8px;border-radius:8px;background:var(--accent-soft);color:var(--accent-ink);
+}
+.margin-pill.warn{background:var(--warn-soft);color:var(--warn)}
+.margin-pill.danger{background:var(--danger-soft);color:var(--danger)}
+.receipt-foot{text-align:center;margin-top:14px;font-size:10px;color:var(--ink-faint);letter-spacing:.04em}
+
+.actions-row{display:flex;gap:8px;margin-top:12px}
+.btn{
+  flex:1;padding:11px;border-radius:var(--radius-sm);border:1.5px solid var(--line-strong);
+  background:var(--surface);color:var(--ink);font-family:var(--body);font-weight:600;font-size:13px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:.15s;
+}
+.btn:active{transform:scale(.97)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+[data-theme="dark"] .btn.primary{color:#0E1B16}
+.btn svg{width:15px;height:15px}
+
+.error-box{
+  background:var(--danger-soft);color:var(--danger);border-radius:var(--radius-sm);
+  padding:12px 14px;font-size:13px;font-weight:500;line-height:1.4;
+}
+
+footer{margin-top:34px;text-align:center;font-size:11.5px;color:var(--ink-faint);line-height:1.6;padding:0 20px}
+footer a{color:var(--accent);text-decoration:none;font-weight:600}
+.save-toast{
+  position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:999px;
+  font-size:12.5px;font-weight:600;opacity:0;pointer-events:none;transition:all .25s;z-index:50;
+  display:flex;align-items:center;gap:7px;
+}
+.save-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.save-toast svg{width:13px;height:13px;color:var(--accent)}
+
+@media(max-width:420px){
+  .grid2{grid-template-columns:1fr}
+  .receipt-head .price-big{font-size:22px}
+}
+
+/* ---------- Print ---------- */
+@media print{
+  body{background:#fff;padding:0}
+  .topbar,.presets,details.settings,.tabs,.actions-row,footer,.save-toast,.section-title{display:none!important}
+  .receipt-wrap{margin:0}
+  .receipt{box-shadow:none;border:1px solid #999}
+  .wrap{max-width:100%;padding:0}
+}
 </style>
 </head>
 <body>
-<div class="container">
 
-<div class="card">
-<h2>Settings</h2>
-<div class="grid">
-<div><label>Base Service Fee (%)</label><input id="baseFee" type="number" value="25" step="0.01"></div>
-<div><label>Payment Fee (%)</label><input id="paymentFee" type="number" value="1.84" step="0.01"></div>
-<div><label>GST on Fees (%)</label><input id="gst" type="number" value="18" step="0.01"></div>
-</div>
-</div>
-
-<div class="card">
-<h2>Forward Calculator (Menu Price → Payout)</h2>
-<label>Menu Price (₹)</label>
-<input id="menuPrice" type="number" value="200" step="0.01">
-<div class="result">
-<div class="row"><span>Base Fee</span><span id="rBase"></span></div>
-<div class="row"><span>Payment Fee</span><span id="rPayment"></span></div>
-<div class="row"><span>GST on Fees</span><span id="rGST"></span></div>
-<div class="row total"><span>Final Payout</span><span id="rPayout"></span></div>
-</div>
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <div class="brand-mark">₹</div>
+      <div class="brand-text">
+        <h1>Payout Calculator</h1>
+        <p>Zomato · Swiggy · Magicpin</p>
+      </div>
+    </div>
+    <div class="live-payout">
+      <span class="lbl">You receive</span>
+      <span class="val" id="topPayout">₹ 0.00</span>
+    </div>
+    <button class="icon-btn" id="themeToggle" aria-label="Toggle dark mode">
+      <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
+    </button>
+  </div>
 </div>
 
-<div class="card">
-<h2>Reverse Calculator (Desired Payout → Required Menu Price)</h2>
-<label>Desired Payout (₹)</label>
-<input id="desired" type="number" value="200" step="0.01">
-<div class="result">
-<div class="row total"><span>Required Menu Price</span><span id="requiredPrice"></span></div>
-</div>
+<div class="wrap">
+
+  <div class="section-title"><span class="n">01</span> Platform preset</div>
+  <div class="presets" id="presets"></div>
+
+  <div class="section-title"><span class="n">02</span> Fees &amp; costs</div>
+  <details class="settings" id="settingsPanel">
+    <summary>
+      <span class="summary-row">
+        <span>Settings</span>
+        <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+      </span>
+    </summary>
+    <div class="settings-body">
+      <p class="subhead">Platform fees</p>
+      <div class="grid2">
+        <div class="field">
+          <label>Base commission <span class="hint">% of price</span></label>
+          <div class="input-wrap"><input class="has-suffix" id="baseFee" type="number" value="50" step="0.01"><span class="suffix">%</span></div>
+        </div>
+        <div class="field">
+          <label>Payment gateway <span class="hint">% of price</span></label>
+          <div class="input-wrap"><input class="has-suffix" id="paymentFee" type="number" value="1.84" step="0.01"><span class="suffix">%</span></div>
+        </div>
+      </div>
+      <div class="field">
+        <label>GST on platform fees <span class="hint">applied to commission</span></label>
+        <div class="input-wrap"><input class="has-suffix" id="gst" type="number" value="18" step="0.01"><span class="suffix">%</span></div>
+      </div>
+
+      <div class="divider"></div>
+      <p class="subhead">Order costs</p>
+      <div class="grid2">
+        <div class="field">
+          <label>Packaging cost <span class="hint">passed through</span></label>
+          <div class="input-wrap"><span class="prefix">₹</span><input class="has-prefix" id="packagingCost" type="number" value="10" step="0.01"></div>
+        </div>
+        <div class="field">
+          <label>Delivery charge <span class="hint">customer-paid, informational</span></label>
+          <div class="input-wrap"><span class="prefix">₹</span><input class="has-prefix" id="deliveryCharge" type="number" value="0" step="0.01"></div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Food cost <span class="hint">optional — per item COGS, for profit</span></label>
+        <div class="input-wrap"><span class="prefix">₹</span><input class="has-prefix" id="foodCost" type="number" placeholder="leave blank to skip" step="0.01"></div>
+      </div>
+
+      <div class="divider"></div>
+      <p class="subhead">Discount</p>
+      <div class="grid2">
+        <div class="field">
+          <label>Discount <span class="hint">on menu price</span></label>
+          <div class="input-wrap"><input class="has-suffix" id="discountPct" type="number" value="0" step="0.01"><span class="suffix">%</span></div>
+        </div>
+        <div class="field">
+          <label>Funded by</label>
+          <div class="seg">
+            <button type="button" id="fundPlatform" class="active">Platform</button>
+            <button type="button" id="fundRestaurant">Restaurant</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+      <button class="btn" id="resetBtn" style="width:100%">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+        Reset to defaults
+      </button>
+    </div>
+  </details>
+
+  <div class="section-title"><span class="n">03</span> Calculate</div>
+  <div class="tabs">
+    <button class="tab active" data-tab="forward">Forward</button>
+    <button class="tab" data-tab="reverse">Reverse</button>
+    <button class="tab" data-tab="optimize">Optimizer</button>
+  </div>
+
+  <div class="panel active" id="panel-forward">
+    <div class="card">
+      <div class="field">
+        <label>Menu price <span class="hint">what the customer sees</span></label>
+        <div class="input-wrap"><span class="prefix">₹</span><input class="has-prefix" id="menuPrice" type="number" value="200" step="0.01"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-reverse">
+    <div class="card">
+      <div class="field">
+        <label>Desired payout <span class="hint">what you want to receive</span></label>
+        <div class="input-wrap"><span class="prefix">₹</span><input class="has-prefix" id="desiredPayout" type="number" value="200" step="0.01"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-optimize">
+    <div class="card">
+      <div class="field">
+        <label>Target payout <span class="hint">% of menu price you keep</span></label>
+        <div class="input-wrap"><input class="has-suffix" id="targetMargin" type="number" value="20" step="0.01"><span class="suffix">%</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="receipt-wrap">
+    <div class="receipt" id="receipt"></div>
+  </div>
+
+  <div class="actions-row">
+    <button class="btn" id="printBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
+      Print receipt
+    </button>
+    <button class="btn primary" id="shareBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>
+      Copy summary
+    </button>
+  </div>
+
+  <footer>
+    Settings save automatically to this device. Commission &amp; fee rates vary by city, contract and campaign — check your platform partner dashboard and adjust the presets above to match your actual agreement.
+  </footer>
 </div>
 
+<div class="save-toast" id="saveToast">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+  <span id="toastText">Settings saved</span>
 </div>
 
 <script>
-function calc(){
- let base=parseFloat(baseFee.value)||0;
- let pay=parseFloat(paymentFee.value)||0;
- let gst=parseFloat(gstInput.value)||0;
- let price=parseFloat(menuPrice.value)||0;
- let desiredP=parseFloat(desired.value)||0;
+(function(){
+"use strict";
 
- let baseAmt=price*base/100;
- let payAmt=price*pay/100;
- let gstAmt=(baseAmt+payAmt)*gst/100;
- let payout=price-baseAmt-payAmt-gstAmt;
+/* ---------------- Presets ---------------- */
+const PRESETS = [
+  {id:"zomato", name:"Zomato", base:50, pay:1.84, gst:18},
+  {id:"swiggy", name:"Swiggy", base:25, pay:2, gst:18},
+  {id:"magicpin", name:"Magicpin", base:15, pay:1.5, gst:18},
+  {id:"custom", name:"Custom", base:null, pay:null, gst:null},
+];
+const DEFAULTS = {
+  preset:"zomato", baseFee:50, paymentFee:1.84, gst:18,
+  packagingCost:10, deliveryCharge:0, foodCost:"",
+  discountPct:0, fundedBy:"platform",
+  menuPrice:200, desiredPayout:200, targetMargin:20,
+  activeTab:"forward"
+};
 
- rBase.textContent="₹ "+baseAmt.toFixed(2);
- rPayment.textContent="₹ "+payAmt.toFixed(2);
- rGST.textContent="₹ "+gstAmt.toFixed(2);
- rPayout.textContent="₹ "+payout.toFixed(2);
+const STORAGE_KEY = "zpc_settings_v1";
+const THEME_KEY = "zpc_theme";
 
- let effective=(base+pay)+(base+pay)*gst/100;
- let factor=1-effective/100;
- let required=desiredP/factor;
- requiredPrice.textContent="₹ "+required.toFixed(2);
+/* ---------------- Elements ---------------- */
+const el = id => document.getElementById(id);
+const ids = ["baseFee","paymentFee","gst","packagingCost","deliveryCharge",
+  "discountPct","menuPrice","desiredPayout","targetMargin","foodCost"];
+const inputs = {}; ids.forEach(id => inputs[id] = el(id));
+
+const presetsRow = el("presets");
+const fundPlatformBtn = el("fundPlatform");
+const fundRestaurantBtn = el("fundRestaurant");
+const tabs = document.querySelectorAll(".tab");
+const panels = document.querySelectorAll(".panel");
+const receiptEl = el("receipt");
+const topPayoutEl = el("topPayout");
+const themeToggle = el("themeToggle");
+const themeIcon = el("themeIcon");
+const saveToast = el("saveToast");
+const toastText = el("toastText");
+
+let state = loadState();
+let fundedBy = state.fundedBy || "platform";
+let activeTab = state.activeTab || "forward";
+let activePreset = state.preset || "custom";
+let toastTimer = null;
+
+/* ---------------- Storage ---------------- */
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return {...DEFAULTS};
+    return {...DEFAULTS, ...JSON.parse(raw)};
+  }catch(e){ return {...DEFAULTS}; }
 }
 
-const baseFee=document.getElementById("baseFee");
-const paymentFee=document.getElementById("paymentFee");
-const gstInput=document.getElementById("gst");
-const menuPrice=document.getElementById("menuPrice");
-const desired=document.getElementById("desired");
+function currentValues(){
+  const v = {fundedBy, activeTab, preset:activePreset};
+  ids.forEach(id => v[id] = inputs[id].value);
+  return v;
+}
 
-const rBase=document.getElementById("rBase");
-const rPayment=document.getElementById("rPayment");
-const rGST=document.getElementById("rGST");
-const rPayout=document.getElementById("rPayout");
-const requiredPrice=document.getElementById("requiredPrice");
+function persist(showToast){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(currentValues()));
+    if(showToast) flashToast("Settings saved");
+  }catch(e){ /* storage unavailable, fail silently */ }
+}
 
-document.querySelectorAll("input").forEach(i=>i.addEventListener("input",calc));
+function flashToast(msg){
+  toastText.textContent = msg;
+  saveToast.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>saveToast.classList.remove("show"), 1600);
+}
+
+/* ---------------- Init values ---------------- */
+ids.forEach(id => { if(state[id] !== undefined) inputs[id].value = state[id]; });
+
+/* ---------------- Presets UI ---------------- */
+function renderPresets(){
+  presetsRow.innerHTML = "";
+  PRESETS.forEach(p=>{
+    const b = document.createElement("button");
+    b.className = "chip" + (p.id===activePreset ? " active" : "");
+    b.textContent = p.name;
+    b.type = "button";
+    b.addEventListener("click", ()=>selectPreset(p.id, true));
+    presetsRow.appendChild(b);
+  });
+}
+function selectPreset(id, userInitiated){
+  activePreset = id;
+  const p = PRESETS.find(x=>x.id===id);
+  if(p && p.base!==null){
+    inputs.baseFee.value = p.base;
+    inputs.paymentFee.value = p.pay;
+    inputs.gst.value = p.gst;
+  }
+  renderPresets();
+  calc();
+  if(userInitiated) persist(true);
+}
+[inputs.baseFee, inputs.paymentFee, inputs.gst].forEach(inp=>{
+  inp.addEventListener("input", ()=>{
+    if(activePreset !== "custom"){ activePreset = "custom"; renderPresets(); }
+  });
+});
+
+/* ---------------- Funded-by toggle ---------------- */
+function setFundedBy(who, userInitiated){
+  fundedBy = who;
+  fundPlatformBtn.classList.toggle("active", who==="platform");
+  fundRestaurantBtn.classList.toggle("active", who==="restaurant");
+  calc();
+  if(userInitiated) persist(false);
+}
+fundPlatformBtn.addEventListener("click", ()=>setFundedBy("platform", true));
+fundRestaurantBtn.addEventListener("click", ()=>setFundedBy("restaurant", true));
+
+/* ---------------- Tabs ---------------- */
+function setTab(name, userInitiated){
+  activeTab = name;
+  tabs.forEach(t=>t.classList.toggle("active", t.dataset.tab===name));
+  panels.forEach(p=>p.classList.toggle("active", p.id === "panel-"+name));
+  calc();
+  if(userInitiated) persist(false);
+}
+tabs.forEach(t=>t.addEventListener("click", ()=>setTab(t.dataset.tab, true)));
+
+/* ---------------- Theme ---------------- */
+function sunIcon(){ return '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>'; }
+function moonIcon(){ return '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>'; }
+function applyTheme(t){
+  document.documentElement.setAttribute("data-theme", t);
+  themeIcon.innerHTML = t==="dark" ? sunIcon() : moonIcon();
+  try{ localStorage.setItem(THEME_KEY, t); }catch(e){}
+}
+let theme = "light";
+try{ theme = localStorage.getItem(THEME_KEY) || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark":"light"); }catch(e){}
+applyTheme(theme);
+themeToggle.addEventListener("click", ()=>{
+  theme = theme==="dark" ? "light" : "dark";
+  applyTheme(theme);
+});
+
+/* ---------------- Reset ---------------- */
+el("resetBtn").addEventListener("click", ()=>{
+  ids.forEach(id=>{ inputs[id].value = DEFAULTS[id]; });
+  setFundedBy("platform", false);
+  selectPreset("zomato", false);
+  calc();
+  persist(true);
+  flashToast("Reset to defaults");
+});
+
+/* ---------------- Number helpers ---------------- */
+const num = v => { const n = parseFloat(v); return isNaN(n) ? 0 : n; };
+const money = n => "₹ " + (Math.abs(n)<0.005?0:n).toLocaleString("en-IN",{minimumFractionDigits:2, maximumFractionDigits:2});
+
+/* ---------------- Core calc ---------------- */
+function readInputs(){
+  return {
+    base: num(inputs.baseFee.value),
+    pay: num(inputs.paymentFee.value),
+    gst: num(inputs.gst.value),
+    packaging: num(inputs.packagingCost.value),
+    foodCost: num(inputs.foodCost.value),
+    foodCostRaw: inputs.foodCost.value.trim(),
+    delivery: num(inputs.deliveryCharge.value),
+    discPct: num(inputs.discountPct.value),
+    menuPrice: num(inputs.menuPrice.value),
+    desiredPayout: num(inputs.desiredPayout.value),
+    targetMargin: num(inputs.targetMargin.value),
+  };
+}
+
+function computeForwardFromPrice(price, v){
+  const baseAmt = price*v.base/100;
+  const payAmt = price*v.pay/100;
+  const gstAmt = (baseAmt+payAmt)*v.gst/100;
+  const discAmt = (fundedBy==="restaurant") ? price*v.discPct/100 : 0;
+  const payout = price - baseAmt - payAmt - gstAmt - discAmt + v.packaging;
+  const marginPct = price>0 ? (payout/price*100) : 0;
+  const hasFoodCost = v.foodCostRaw !== "" && v.foodCostRaw !== undefined;
+  const profit = hasFoodCost ? (payout - v.foodCost) : null;
+  const profitPct = (hasFoodCost && price>0) ? (profit/price*100) : null;
+  return {baseAmt, payAmt, gstAmt, discAmt, payout, marginPct, profit, profitPct, hasFoodCost};
+}
+
+function effectiveFraction(v){
+  const feeFrac = (v.base+v.pay)/100;
+  const feeWithGst = feeFrac + feeFrac*v.gst/100;
+  const discFrac = (fundedBy==="restaurant") ? v.discPct/100 : 0;
+  return feeWithGst + discFrac; // K deduction fraction
+}
+
+function render(){
+  const v = readInputs();
+  let html = "";
+  const platLabel = PRESETS.find(p=>p.id===activePreset)?.name || "Custom";
+
+  if(activeTab === "forward"){
+    const price = v.menuPrice;
+    const r = computeForwardFromPrice(price, v);
+    topPayoutEl.textContent = money(r.payout);
+    html = receiptHTML(platLabel, price, [
+      {label:"Base commission", amt:-r.baseAmt, cls:"deduct"},
+      {label:"Payment gateway fee", amt:-r.payAmt, cls:"deduct"},
+      {label:"GST on fees", amt:-r.gstAmt, cls:"deduct"},
+      r.discAmt>0 ? {label:"Restaurant-funded discount", amt:-r.discAmt, cls:"deduct"} : null,
+      {label:"Packaging cost (passed through)", amt:v.packaging, cls:"add"},
+    ].filter(Boolean), "Final payout", r.payout, marginPillHTML(r));
+  }
+
+  else if(activeTab === "reverse"){
+    const K = effectiveFraction(v);
+    const denom = 1 - K;
+    if(denom <= 0){
+      html = errorHTML("With these fees and discount, no menu price can produce a positive payout. Lower the commission, payment fee or discount.");
+      topPayoutEl.textContent = money(v.desiredPayout);
+    } else {
+      const requiredPrice = (v.desiredPayout - v.packaging) / denom;
+      if(requiredPrice < 0){
+        html = errorHTML("Packaging cost alone already covers this payout — try a higher desired payout.");
+        topPayoutEl.textContent = money(v.desiredPayout);
+      } else {
+        const r = computeForwardFromPrice(requiredPrice, v);
+        topPayoutEl.textContent = money(r.payout);
+        html = receiptHTML(platLabel, requiredPrice, [
+          {label:"Base commission", amt:-r.baseAmt, cls:"deduct"},
+          {label:"Payment gateway fee", amt:-r.payAmt, cls:"deduct"},
+          {label:"GST on fees", amt:-r.gstAmt, cls:"deduct"},
+          r.discAmt>0 ? {label:"Restaurant-funded discount", amt:-r.discAmt, cls:"deduct"} : null,
+          {label:"Packaging cost (passed through)", amt:v.packaging, cls:"add"},
+        ].filter(Boolean), "Required menu price", requiredPrice, marginPillHTML(r), true);
+      }
+    }
+  }
+
+  else if(activeTab === "optimize"){
+    const K = effectiveFraction(v);
+    const baselinePct = (1-K)*100; // payout % you get at any price when packaging is 0
+    const m = v.targetMargin/100;
+    const denom = m - (1-K);
+    if(v.packaging <= 0){
+      html = errorHTML(`With no packaging cost, your payout is always ${baselinePct.toFixed(1)}% of the menu price, at any price point — it can't be tuned by changing price alone. Add a packaging cost, or adjust fees/discount to change this baseline.`);
+      topPayoutEl.textContent = "₹ 0.00";
+    } else if(denom <= 0){
+      html = errorHTML(`This target is at or below your baseline payout rate of ${baselinePct.toFixed(1)}%, which every price already clears — try a higher target, or this one is already satisfied at any price.`);
+      topPayoutEl.textContent = "₹ 0.00";
+    } else {
+      const requiredPrice = v.packaging / denom;
+      const r = computeForwardFromPrice(requiredPrice, v);
+      topPayoutEl.textContent = money(r.payout);
+      html = receiptHTML(platLabel, requiredPrice, [
+        {label:"Base commission", amt:-r.baseAmt, cls:"deduct"},
+        {label:"Payment gateway fee", amt:-r.payAmt, cls:"deduct"},
+        {label:"GST on fees", amt:-r.gstAmt, cls:"deduct"},
+        r.discAmt>0 ? {label:"Restaurant-funded discount", amt:-r.discAmt, cls:"deduct"} : null,
+        {label:"Packaging cost (passed through)", amt:v.packaging, cls:"add"},
+      ].filter(Boolean), "Menu price to set", requiredPrice, marginPillHTML(r));
+    }
+  }
+
+  receiptEl.innerHTML = html;
+}
+
+function marginPillHTML(r){
+  const cls = r.marginPct < 0 ? "danger" : (r.marginPct < 60 ? "warn" : "");
+  let html = `<div class="margin-pill ${cls}">You keep ${r.marginPct.toFixed(1)}% of the menu price</div>`;
+  if(r.hasFoodCost){
+    const pcls = r.profit < 0 ? "danger" : (r.profitPct < 15 ? "warn" : "");
+    html += `<div class="margin-pill ${pcls}">Profit ${money(r.profit)} · ${r.profitPct.toFixed(1)}% after food cost</div>`;
+  }
+  return html;
+}
+
+function errorHTML(msg){
+  return `<div class="error-box">${msg}</div>`;
+}
+
+function receiptHTML(platform, price, lines, totalLabel, totalAmt, pillHtml, isReverse){
+  const linesHtml = lines.map(l=>`
+    <div class="rline ${l.cls}">
+      <span>${l.label}</span>
+      <span class="amt">${l.amt<0? "− "+money(l.amt):"+ "+money(l.amt)}</span>
+    </div>`).join("");
+  return `
+    <div class="receipt-head">
+      <div class="plat">${platform}<span class="dot">•</span>${isReverse? "reverse calc" : "order chit"}</div>
+      <div class="price-big">${money(price)}</div>
+    </div>
+    <div class="rline tight"><span>Menu price</span><span class="amt">${money(price)}</span></div>
+    ${linesHtml}
+    <div class="rtotal"><span class="lbl">${totalLabel}</span><span class="amt">${money(totalAmt)}</span></div>
+    ${pillHtml}
+    <div class="receipt-foot">— thank you, cook on —</div>
+  `;
+}
+
+function calc(){
+  render();
+}
+
+/* ---------------- Wire up live updates ---------------- */
+ids.forEach(id=>{
+  inputs[id].addEventListener("input", ()=>{ calc(); persist(false); });
+});
+
+/* ---------------- Print ---------------- */
+el("printBtn").addEventListener("click", ()=>window.print());
+
+/* ---------------- Copy summary ---------------- */
+el("shareBtn").addEventListener("click", ()=>{
+  const text = receiptEl.innerText.replace(/\s+\n/g,"\n").trim();
+  const platLabel = PRESETS.find(p=>p.id===activePreset)?.name || "Custom";
+  const full = `${platLabel} payout summary\n${"-".repeat(28)}\n${text}`;
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(full).then(()=>flashToast("Copied to clipboard"))
+      .catch(()=>flashToast("Couldn't copy — select manually"));
+  } else {
+    flashToast("Clipboard not available");
+  }
+});
+
+/* ---------------- Boot ---------------- */
+setFundedBy(fundedBy, false);
+setTab(activeTab, false);
+renderPresets();
 calc();
+})();
 </script>
 </body>
 </html>
