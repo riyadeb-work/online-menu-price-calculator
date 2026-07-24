@@ -708,7 +708,7 @@ function render(){
 function marginPillHTML(r){
   const cls = r.marginPct < 0 ? "danger" : (r.marginPct < 60 ? "warn" : "");
   let html = `<div class="margin-pill ${cls}">You keep ${r.marginPct.toFixed(1)}% of the menu price</div>`;
-  if(r.hasFoodCost){
+  if(r.hasFoodCost && r.profitPct !== null){
     const pcls = r.profit < 0 ? "danger" : (r.profitPct < 15 ? "warn" : "");
     html += `<div class="margin-pill ${pcls}">Profit ${money(r.profit)} · ${r.profitPct.toFixed(1)}% after food cost</div>`;
   }
